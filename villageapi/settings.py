@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import os
+from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 load_dotenv(dotenv_path="D:/village_api/villageapi/.env")
 
@@ -19,7 +20,7 @@ SECRET_KEY = 'django-insecure-93+k!4mepfo&8r9fj&#6)1b+4lrx)yt$iokbp!v4!da%=q-j=%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['villlage-api.onrender.com', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1','villlage-api.onrender.com', 'localhost']
 
 
 
@@ -118,4 +119,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_HEADERS = list(default_headers)  # Allow default CORS headers
+
 #DATABASE_URL=postgresql://postgres:5cxrtDOfiaXmNFzo@db.zkglooidftewwduzvzsj.supabase.co:5432/postgres
