@@ -15,3 +15,4 @@ class WorkerAdmin(admin.ModelAdmin):
 
 admin.site.register(Job, JobAdmin)
 #admin.site.register(Worker, WorkerAdmin)
+

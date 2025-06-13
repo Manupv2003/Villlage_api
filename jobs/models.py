@@ -16,4 +16,3 @@ class Worker(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.job.title})"
-
