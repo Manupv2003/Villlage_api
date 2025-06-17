@@ -1,0 +1,7 @@
+villageapi/firebase_service_account.json
+
+media/
+.env
+venv/
+__pycache__/
+*.pyc
