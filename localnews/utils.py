@@ -5,7 +5,7 @@ import os
 # Only initialize once
 if not firebase_admin._apps:
     cred = credentials.Certificate(
-        os.path.join('villageapi', 'firebase_service_account.json')
+        os.path.join('villageapi', 'village-app-97c3a-firebase-adminsdk-fbsvc-deba4452d4.json')
     )
     firebase_admin.initialize_app(cred)
 
