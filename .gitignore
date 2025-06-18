@@ -6,3 +6,4 @@ venv/
 __pycache__/
 *.pyc
 village-app-97c3a-firebase-adminsdk-fbsvc-deba4452d4.json
+*.json
