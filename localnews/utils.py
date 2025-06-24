@@ -14,13 +14,23 @@ if not firebase_admin._apps:
         )
     firebase_admin.initialize_app(cred)
 
-def send_fcm_v1_notification(token, title, body):
-    message = messaging.Message(
+def send_fcm_v1_notification(tokens, title, body):
+    if not tokens:
+        return
+    message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=title,
             body=body,
         ),
-        token=token,
+        tokens=tokens,
     )
-    response = messaging.send(message)
+    response = messaging.send_multicast(message)
+    # Remove invalid tokens
+    from .models import Device
+    for idx, resp in enumerate(response.responses):
+        if not resp.success:
+            error = resp.exception
+            if isinstance(error, messaging.UnregisteredError):
+                Device.objects.filter(token=tokens[idx]).delete()
+                print(f"Removed invalid FCM token: {tokens[idx]}")
     return response
