@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from .models import LocalNews, Device
 from .serializers import LocalNewsSerializer
 from .utils import send_fcm_v1_notification
-from firebase_admin import messaging
 
 class LocalNewsListView(generics.ListAPIView):
     queryset = LocalNews.objects.all().order_by('-date_posted')
@@ -21,10 +20,9 @@ class LocalNewsCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         news = serializer.save()
-        # Get all device tokens from your database
-        device_tokens = [d.token for d in Device.objects.all()]  # Example model
+        device_tokens = [d.token for d in Device.objects.all()]
         send_fcm_v1_notification(
-            token=device_tokens,  # or loop through tokens if sending one by one
+            tokens=device_tokens,
             title=news.title,
             body=news.short_description
         )
@@ -37,26 +35,3 @@ class RegisterDeviceView(APIView):
             Device.objects.update_or_create(token=token, defaults={'user': user})
             return Response({'status': 'registered'})
         return Response({'error': 'No token provided'}, status=400)
-
-def send_fcm_v1_notification(tokens, title, body):
-    if not tokens:
-        return
-    message = messaging.MulticastMessage(
-        notification=messaging.Notification(
-            title=title,
-            body=body,
-        ),
-        tokens=tokens,
-    )
-    response = messaging.send_multicast(message)
-    # Remove invalid tokens
-    from .models import Device
-    for idx, resp in enumerate(response.responses):
-        if not resp.success:
-            error = resp.exception
-            if isinstance(error, messaging.UnregisteredError):
-                Device.objects.filter(token=tokens[idx]).delete()
-                print(f"Removed invalid FCM token: {tokens[idx]}")
-    return response
-
-# Create your views here.

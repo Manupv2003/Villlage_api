@@ -17,20 +17,23 @@ if not firebase_admin._apps:
 def send_fcm_v1_notification(tokens, title, body):
     if not tokens:
         return
-    message = messaging.MulticastMessage(
-        notification=messaging.Notification(
-            title=title,
-            body=body,
-        ),
-        tokens=tokens,
-    )
-    response = messaging.send_multicast(message)
-    # Remove invalid tokens
     from .models import Device
-    for idx, resp in enumerate(response.responses):
-        if not resp.success:
-            error = resp.exception
-            if isinstance(error, messaging.UnregisteredError):
-                Device.objects.filter(token=tokens[idx]).delete()
-                print(f"Removed invalid FCM token: {tokens[idx]}")
+    batch_size = 500
+    for i in range(0, len(tokens), batch_size):
+        batch = tokens[i:i+batch_size]
+        message = messaging.MulticastMessage(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            tokens=batch,
+        )
+        response = messaging.send_multicast(message)
+        # Remove invalid tokens
+        for idx, resp in enumerate(response.responses):
+            if not resp.success:
+                error = resp.exception
+                if isinstance(error, messaging.UnregisteredError):
+                    Device.objects.filter(token=batch[idx]).delete()
+                    print(f"Removed invalid FCM token: {batch[idx]}")
     return response
