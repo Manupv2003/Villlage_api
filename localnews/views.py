@@ -38,23 +38,25 @@ class RegisterDeviceView(APIView):
             return Response({'status': 'registered'})
         return Response({'error': 'No token provided'}, status=400)
 
-def send_fcm_v1_notification(token, title, body):
-    try:
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title=title,
-                body=body,
-            ),
-            token=token,
-        )
-        response = messaging.send(message)
-        return response
-    except messaging.UnregisteredError:
-        # Remove the token from your Device model
-        from .models import Device
-        Device.objects.filter(token=token).delete()
-        print(f"Removed invalid FCM token: {token}")
-    except Exception as e:
-        print(f"FCM send error: {e}")
+def send_fcm_v1_notification(tokens, title, body):
+    if not tokens:
+        return
+    message = messaging.MulticastMessage(
+        notification=messaging.Notification(
+            title=title,
+            body=body,
+        ),
+        tokens=tokens,
+    )
+    response = messaging.send_multicast(message)
+    # Remove invalid tokens
+    from .models import Device
+    for idx, resp in enumerate(response.responses):
+        if not resp.success:
+            error = resp.exception
+            if isinstance(error, messaging.UnregisteredError):
+                Device.objects.filter(token=tokens[idx]).delete()
+                print(f"Removed invalid FCM token: {tokens[idx]}")
+    return response
 
 # Create your views here.
