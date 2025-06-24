@@ -15,12 +15,16 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
 def send_fcm_v1_notification(tokens, title, body):
+    # Remove empty or None tokens
+    tokens = [t for t in tokens if t]
     if not tokens:
         return
     from .models import Device
     batch_size = 500
     for i in range(0, len(tokens), batch_size):
         batch = tokens[i:i+batch_size]
+        if not batch:
+            continue
         message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
@@ -28,12 +32,15 @@ def send_fcm_v1_notification(tokens, title, body):
             ),
             tokens=batch,
         )
-        response = messaging.send_multicast(message)
-        # Remove invalid tokens
-        for idx, resp in enumerate(response.responses):
-            if not resp.success:
-                error = resp.exception
-                if isinstance(error, messaging.UnregisteredError):
-                    Device.objects.filter(token=batch[idx]).delete()
-                    print(f"Removed invalid FCM token: {batch[idx]}")
-    return response
+        try:
+            response = messaging.send_multicast(message)
+            # Remove invalid tokens
+            for idx, resp in enumerate(response.responses):
+                if not resp.success:
+                    error = resp.exception
+                    if isinstance(error, messaging.UnregisteredError):
+                        Device.objects.filter(token=batch[idx]).delete()
+                        print(f"Removed invalid FCM token: {batch[idx]}")
+        except Exception as e:
+            print(f"FCM send error: {e}")
+    return
