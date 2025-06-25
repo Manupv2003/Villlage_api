@@ -25,6 +25,7 @@ def send_fcm_v1_notification(tokens, title, body):
         batch = tokens[i:i+batch_size]
         if not batch:
             continue
+        print("Sending notification to:", batch)
         message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
@@ -34,6 +35,7 @@ def send_fcm_v1_notification(tokens, title, body):
         )
         try:
             response = messaging.send_multicast(message)
+            print(f"FCM response: {response}")
             # Remove invalid tokens
             for idx, resp in enumerate(response.responses):
                 if not resp.success:
