@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'jobs',
     'rest_framework',
     'localnews',
+    'phonebook',
 ]
 
 MIDDLEWARE = [
